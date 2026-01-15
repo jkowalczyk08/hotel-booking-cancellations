@@ -8,7 +8,6 @@ EDA and prediction models for hotel cancellations based on the [Hotel Booking De
 hotel-booking-cancellations/
 ├── data/           # Directory for dataset files
 ├── notebooks/      # Jupyter notebooks for analysis and modeling
-├── main.py         # Main entry point (if applicable)
 ├── pyproject.toml  # Project configuration and dependencies
 └── README.md       # Project documentation
 ```
@@ -18,7 +17,7 @@ hotel-booking-cancellations/
 ### Prerequisites
 
 - **Git**: Ensure Git is installed on your system.
-- **uv**: This project uses `uv` for dependency management. You can install it via:
+- **uv**: This project uses [uv](https://docs.astral.sh/uv/) for dependency management. You can install it via:
   ```bash
   curl -LsSf https://astral.sh/uv/install.sh | sh
   ```
@@ -36,18 +35,3 @@ hotel-booking-cancellations/
     ```bash
     uv sync
     ```
-
-### Dataset Setup
-
-1.  Download the `hotel_bookings.csv` file from [Kaggle](https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand).
-2.  Place the `hotel_bookings.csv` file inside the `data/` directory.
-
-### Usage
-
-To run the Jupyter notebooks:
-
-1.  Activate the environment and launch Jupyter Lab (or Notebook):
-    ```bash
-    uv run jupyter lab
-    ```
-2.  Open `notebooks/01_eda_and_preprocessing.ipynb` to start exploring the data.
