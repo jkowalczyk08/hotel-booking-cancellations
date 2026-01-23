@@ -15,8 +15,6 @@
 
 # %% [markdown]
 # # Hotel Booking Cancellations - Exploratory Data Analysis
-#
-# W tym notebooku przeprowadzamy dogłębną analizę danych rezerwacji hotelowych, skupiając się na zrozumieniu wzorców anulowań.
 
 # %%
 import pandas as pd
