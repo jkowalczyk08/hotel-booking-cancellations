@@ -6,10 +6,11 @@ EDA and prediction models for hotel cancellations based on the [Hotel Booking De
 
 ```
 hotel-booking-cancellations/
-├── data/           # Directory for dataset files
-├── notebooks/      # Jupyter notebooks for analysis and modeling
-├── pyproject.toml  # Project configuration and dependencies
-└── README.md       # Project documentation
+├── data/               # Raw, cleaned and split dataset files (.csv, .parquet)
+├── notebooks/          # Jupyter notebooks for analysis and modeling
+├── src/                # Shared Python utility modules
+├── pyproject.toml      # Project configuration and dependencies
+└── README.md           # Project documentation
 ```
 
 ## Getting Started
