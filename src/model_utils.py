@@ -3,6 +3,7 @@ from typing import Any
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
+import numpy as np
 import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
@@ -21,17 +22,62 @@ from src.set_utils import load_splits
 def prepare_encoded_splits(
     X_train: pd.DataFrame, X_val: pd.DataFrame, X_test: pd.DataFrame
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    combined = pd.concat({"train": X_train, "val": X_val, "test": X_test}, names=["split"])
+    """
+    custom feature engineering and encoding approach:
+    1. agent: Top-10 frequent agents (excluding 0 - NaN replacement after preprocessing) become binary cols,
+        rest -> agent_other, 0 -> agent_none.
+    2. country: Top-10 frequent countries become binary cols, rest -> country_other.
+    3. company: binary has_company.
+    4. arrival_date_week_number: cyclical week_sin and week_cos columns (week 53 and week 1 are close).
+    5. Remaining object cols: One Hot Encoded.
+    """
+
+    # top 10 on training set to avoid data leakage
+    top_agents = X_train.loc[X_train["agent"] != 0, "agent"].value_counts().nlargest(10).index.tolist()
+    top_countries = X_train["country"].value_counts().nlargest(10).index.tolist()
+
+
+    def process_split_high_cardinality_categorical(df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy()
+
+        for agent_id in top_agents:
+            df[f"agent_{int(agent_id)}"] = (df["agent"] == agent_id).astype(int)
+        
+        df["agent_other"] = (~df["agent"].isin(top_agents) & (df["agent"] != 0)).astype(int)
+        df["agent_none"] = (df["agent"] == 0).astype(int)
+        df = df.drop(columns=["agent"])
+
+        for country_code in top_countries:
+            df[f"country_{country_code}"] = (df["country"] == country_code).astype(int)
+        
+        df["country_other"] = (~df["country"].isin(top_countries)).astype(int)
+        df = df.drop(columns=["country"])
+
+        df["has_company"] = (df["company"] != 0).astype(int)
+        df = df.drop(columns=["company"])
+
+        
+        df["week_sin"] = np.sin(2 * np.pi * df["arrival_date_week_number"] / 53)
+        df["week_cos"] = np.cos(2 * np.pi * df["arrival_date_week_number"] / 53)
+        df = df.drop(columns=["arrival_date_week_number"])
+        
+        return df
+
+    X_train_proc = process_split_high_cardinality_categorical(X_train)
+    X_val_proc = process_split_high_cardinality_categorical(X_val)
+    X_test_proc = process_split_high_cardinality_categorical(X_test)
+
+    combined = pd.concat({"train": X_train_proc, "val": X_val_proc, "test": X_test_proc}, names=["split"])
     combined_encoded = pd.get_dummies(combined, drop_first=False)
 
-    X_train_encoded = combined_encoded.xs("train", level="split")
-    X_val_encoded = combined_encoded.xs("val", level="split")
-    X_test_encoded = combined_encoded.xs("test", level="split")
+    X_train_final = combined_encoded.xs("train", level="split")
+    X_val_final = combined_encoded.xs("val", level="split")
+    X_test_final = combined_encoded.xs("test", level="split")
 
-    X_val_encoded = X_val_encoded.reindex(columns=X_train_encoded.columns, fill_value=0)
-    X_test_encoded = X_test_encoded.reindex(columns=X_train_encoded.columns, fill_value=0)
+    X_val_final = X_val_final.reindex(columns=X_train_final.columns, fill_value=0)
+    X_test_final = X_test_final.reindex(columns=X_train_final.columns, fill_value=0)
 
-    return X_train_encoded, X_val_encoded, X_test_encoded
+    return X_train_final, X_val_final, X_test_final
 
 
 def load_encoded_splits(
