@@ -80,6 +80,19 @@ def prepare_encoded_splits(
     return X_train_final, X_val_final, X_test_final
 
 
+def prepare_encoded_splits_no_leakage(
+    X_train: pd.DataFrame, X_val: pd.DataFrame, X_test: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Baseline encoding with leakage-prone assigned room type removed.
+    """
+    X_train = X_train.drop(columns=["assigned_room_type"], errors="ignore")
+    X_val = X_val.drop(columns=["assigned_room_type"], errors="ignore")
+    X_test = X_test.drop(columns=["assigned_room_type"], errors="ignore")
+
+    return prepare_encoded_splits(X_train, X_val, X_test)
+
+
 def prepare_encoded_splits_enhanced(
     X_train: pd.DataFrame, X_val: pd.DataFrame, X_test: pd.DataFrame
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -185,6 +198,8 @@ def load_encoded_splits(
     
     if version == "baseline":
         X_train, X_val, X_test = prepare_encoded_splits(X_train, X_val, X_test)
+    elif version == "no-leakage":
+        X_train, X_val, X_test = prepare_encoded_splits_no_leakage(X_train, X_val, X_test)
     elif version == "enhanced":
         X_train, X_val, X_test = prepare_encoded_splits_enhanced(X_train, X_val, X_test)
     else:
