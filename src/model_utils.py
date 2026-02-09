@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 import matplotlib
@@ -17,6 +18,29 @@ from sklearn.metrics import (
 from sklearn.model_selection import RandomizedSearchCV
 
 from src.set_utils import load_splits
+
+
+def normalize_notebook_title(notebook_name: str) -> str:
+    """
+    Convert a notebook filename/path into a human-readable title.
+
+    Rules:
+    - remove directories and `.ipynb` suffix
+    - remove digits
+    - replace underscores with spaces
+    - collapse repeated whitespace
+    """
+    base_name = notebook_name.split("/")[-1].split("\\")[-1]
+    base_name = base_name.removesuffix(".ipynb")
+    base_name = re.sub(r"\d+", "", base_name).replace("_", " ")
+    normalized = re.sub(r"\s+", " ", base_name).strip()
+    return normalized.title() if normalized else "Model"
+
+
+def _build_plot_title(notebook_name: str | None, suffix: str, fallback: str) -> str:
+    if notebook_name:
+        return f"{normalize_notebook_title(notebook_name)} - {suffix}"
+    return fallback
 
 
 def prepare_encoded_splits(
@@ -235,6 +259,7 @@ def plot_roc_curve(
     split_name: str,
     ax: plt.Axes | None = None,
     color: str = "#1f77b4",
+    notebook_name: str | None = None,
 ) -> float:
     if hasattr(model, "predict_proba"):
         y_score = model.predict_proba(X)[:, 1]
@@ -253,7 +278,13 @@ def plot_roc_curve(
 
     ax.plot(fpr, tpr, color=color, linewidth=2, label=f"AUC = {auc_value:.3f}")
     ax.plot([0, 1], [0, 1], linestyle="--", color="#666666", linewidth=1.5, label="Random")
-    ax.set_title(f"{split_name.capitalize()} ROC curve")
+    ax.set_title(
+        _build_plot_title(
+            notebook_name=notebook_name,
+            suffix=f"{split_name.capitalize()} ROC curve",
+            fallback=f"{split_name.capitalize()} ROC curve",
+        )
+    )
     ax.set_xlabel("False Positive Rate")
     ax.set_ylabel("True Positive Rate")
     ax.set_xlim(0, 1)
@@ -279,6 +310,7 @@ def get_confusion_matrix_df(
     normalize: str | None = None,
     plot: bool = False,
     cmap: str = "Blues",
+    notebook_name: str | None = None,
 ) -> pd.DataFrame:
     y_pred = model.predict(X)
     cm = confusion_matrix(y, y_pred, labels=[0, 1], normalize=normalize)
@@ -303,7 +335,13 @@ def get_confusion_matrix_df(
         ax.set_yticks([0, 1], labels=cm_df.index)
         ax.set_xlabel(cm_df.columns.name)
         ax.set_ylabel(cm_df.index.name)
-        ax.set_title(f"{split_name.capitalize()} confusion matrix")
+        ax.set_title(
+            _build_plot_title(
+                notebook_name=notebook_name,
+                suffix=f"{split_name.capitalize()} confusion matrix",
+                fallback=f"{split_name.capitalize()} confusion matrix",
+            )
+        )
 
         value_format = ".3f" if normalize is not None else "d"
         threshold = cm_df.values.max() / 2.0 if cm_df.values.size else 0
@@ -327,6 +365,7 @@ def plot_metric_scorecards(
     test_results: dict,
     metrics: tuple[str, ...] = ("f1", "recall", "roc_auc", "precision", "accuracy"),
     decimals: int = 3,
+    notebook_name: str | None = None,
 ) -> None:
     metric_labels = {
         "f1": "F1",
@@ -403,7 +442,16 @@ def plot_metric_scorecards(
                     transform=axis.transAxes,
                 )
 
-    fig.suptitle("Model Scorecards", fontsize=14, fontweight="bold", y=0.99)
+    fig.suptitle(
+        _build_plot_title(
+            notebook_name=notebook_name,
+            suffix="Model Scorecards",
+            fallback="Model Scorecards",
+        ),
+        fontsize=14,
+        fontweight="bold",
+        y=0.99,
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.95])
 
     if "agg" in matplotlib.get_backend().lower():
