@@ -2,6 +2,18 @@
 
 EDA and prediction models for hotel cancellations based on the [Hotel Booking Demand dataset](https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand) on Kaggle.
 
+## Models
+
+Models are in separate notebooks. We used:
+- Logistic regression
+- Random forest
+- Decision tree
+- kNN
+- Ada boost
+- XG boost
+
+For each model we used 3 different preprocessing functions defined in src/model_utils.py.
+
 ## Project Structure
 
 ```
@@ -12,6 +24,9 @@ hotel-booking-cancellations/
 ├── pyproject.toml      # Project configuration and dependencies
 └── README.md           # Project documentation
 ```
+
+## Markdown cells
+Some cells are in Polish for university presentation.
 
 ## Getting Started
 
